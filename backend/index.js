@@ -2,25 +2,26 @@ const express = require('express');
 const cors = require('cors');
 const products = require('./products')
 const mogoose = require('mongoose');
+const bodyParser = require('body-parser');
 const app = express();
 const register = require('./routes/register');
 const login = require('./routes/login');
 const stripe = require('./routes/stripe');
+const productsRoute = require('./routes/products');
+const users = require('./routes/users');
+const orders = require('./routes/orders');
 
 
 require('dotenv').config();
-
-app.use(express.json());
-app.use(cors({
-    origin: 'http://localhost:3000',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    preflightContinue: false,
-    optionsSuccessStatus: 204
-  }));
+app.use(cors());
+app.use(express.json({limit: '50mb'}));
 
 app.use('/api/register', register);
 app.use('/api/login', login);
 app.use('/api/stripe', stripe);
+app.use('/api/products', productsRoute);
+app.use('/api/users', users);
+app.use('/api/orders', orders);
  
 app.get('/', (req, res) => {
     res.send('Hello World!');
