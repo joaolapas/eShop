@@ -5,7 +5,7 @@ const router = express.Router();
 const { Order } = require("../models/Order");
 
 router.post("/create-checkout-session", async (req, res) => {
-  
+  console.log('hey');
   const customer = await stripe.customers.create({
     metadata: {
       userId: req.body.user,
@@ -89,9 +89,6 @@ router.post("/create-checkout-session", async (req, res) => {
 });
 
 const createOrder = async (customer, data, lineItems) => {
-  
-
-
   const newOrder = new Order({
     userId: customer.metadata.userId,
     customerId: data.customer,
@@ -103,7 +100,7 @@ const createOrder = async (customer, data, lineItems) => {
     paymentStatus: data.payment_status,
     deliveryStatus: data.delivery_status,
   });
-
+  console.log("dentro do createOrder");
   try {
     const order = await newOrder.save();
     console.log("saved order:", order);
@@ -120,7 +117,7 @@ const createOrder = async (customer, data, lineItems) => {
 router.post(
   "/webhook",
   express.json({ type: "application/json" }),
-  (request, response) => {
+  async (request, response) => {
     let endpointSecret;
     let data;
     let eventType;
@@ -148,21 +145,20 @@ router.post(
       data = request.body.data.object;
       eventType = request.body.type;
     }
+    
     //handle webhook events here
     if (eventType === "checkout.session.completed") {
+      
       stripe.customers
         .retrieve(data.customer)
         .then(async (customer) => {
-          console.log(customer);
-          console.log("data:", data);
-          stripe.checkout.sessions.listLineItems(
-            data.id,
-            {},
-            function (err, lineItems) {
-              console.log("lineItems:", lineItems);
-              createOrder(customer, data, lineItems);
-            }
-          );
+          try {
+            // CREATE ORDER
+            createOrder(customer, data, lineItems);
+          } catch (err) {
+            console.log(typeof createOrder);
+            console.log(err);
+          }
         })
         .catch((err) => {
           console.log("errinho:", err.message);
